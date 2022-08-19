@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "name": "mySbMsg",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "queue-dummy-dl-creation",
+      "connection": "sbnsdummydlcreation_SERVICEBUS"
+    }
+  ]
+}
