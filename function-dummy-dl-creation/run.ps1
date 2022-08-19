@@ -48,7 +48,7 @@ function main() {
   # dl creation
   if ($statusObject.status -ne "Error") { CreateDL }
 
-  # $header = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
+  # $responseHeader = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
 
   # $processingStatus = New-Object System.Collections.Arraylist
   # $processingStatus.Add(@{
@@ -58,6 +58,29 @@ function main() {
   #     "timestamp"        = $(Get-Date); 
   #     "response_message" = $statusObject.message;
   #   })
+
+  $processingStatus = @{
+    "functionName"     = $TriggerMetadata.functionName; 
+    "statusCode"       = $statusObject.statusCode; 
+    "status"           = $statusObject.status; 
+    "timestamp"        = $(Get-Date); 
+    "response_message" = $statusObject.message;
+    "sample_json"      = @{
+      "p" = "2000";
+      "q" = "rainy";
+    };
+  }
+
+  $sample_dict2 = @{
+    "year"    = "2100";
+    "weather" = "sunny";
+  }
+
+  # += adds additional key-value pairs to sample_json dict, need to see if it's at all needed..
+  $processingStatus.sample_json += $sample_dict2
+
+  $dummy_process_status = ConvertTo-Json $processingStatus
+  Write-Host $dummy_process_status
 
   # $mySbMsg.processingStatus += $processingStatus
 
