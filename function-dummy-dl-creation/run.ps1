@@ -3,7 +3,7 @@ Description: Creates a DL in Exchange 365
 Date: 19th Aug, 2022
 #>
 
-param([string] $mySbMsg, $TriggerMetadata)
+param($mySbMsg, $TriggerMetadata)
 
 $statusObject = @{status = "Complete"; statusCode = "200"; message = "Transaction Successful"; }
 
@@ -77,6 +77,8 @@ function main() {
   }
 
   # += adds additional key-value pairs to sample_json dict, need to see if it's at all needed..
+  # NOTE: mySbMsg parameter will interpret the JSON data as Hashtable/Dict
+  # That's why += operator will work there
   $processingStatus.sample_json += $sample_dict2
 
   $dummy_process_status = ConvertTo-Json $processingStatus
@@ -90,6 +92,7 @@ function main() {
   # sendResponse $header $Body
 
   Write-Host "Process Completed - $(Get-Date)"
+  Write-Host $mySbMsg.GetType()
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
