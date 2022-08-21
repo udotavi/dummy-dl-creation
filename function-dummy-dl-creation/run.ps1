@@ -1,6 +1,7 @@
 <#
 Description: Creates a DL in Exchange 365
 Date: 19th Aug, 2022
+Version: Under Development
 #>
 
 param($mySbMsg, $TriggerMetadata)
@@ -39,15 +40,8 @@ function CreateDL() {
   }
 }
 
-function main() {
-  Write-Host "Process Started - $(Get-Date)"
-
-  # connection setup
-  if ($statusObject.status -ne "Error") { ConnectionSetup }
-
-  # dl creation
-  if ($statusObject.status -ne "Error") { CreateDL }
-
+# parses overall process status and sends response
+function RespondWithStatus() {
   $responseHeader = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
 
   $processingStatus = @{
@@ -65,9 +59,21 @@ function main() {
   # Calling function send message back to topic
   # sendResponse $responseHeader $responseBody
   sendResponse $responseHeader
+}
+
+function main() {
+  Write-Host "Process Started - $(Get-Date)"
+
+  # connection setup
+  if ($statusObject.status -ne "Error") { ConnectionSetup }
+
+  # dl creation
+  if ($statusObject.status -ne "Error") { CreateDL }
+
+  # responding with execution status, message
+  RespondWithStatus
 
   Write-Host "Process Completed - $(Get-Date)"
-  # Write-Host $mySbMsg.GetType()
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
