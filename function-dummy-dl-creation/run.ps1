@@ -48,16 +48,7 @@ function main() {
   # dl creation
   if ($statusObject.status -ne "Error") { CreateDL }
 
-  # $responseHeader = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
-
-  # $processingStatus = New-Object System.Collections.Arraylist
-  # $processingStatus.Add(@{
-  #     "functionName"     = $TriggerMetadata.functionName; 
-  #     "statusCode"       = $statusObject.statusCode; 
-  #     "status"           = $statusObject.status; 
-  #     "timestamp"        = $(Get-Date); 
-  #     "response_message" = $statusObject.message;
-  #   })
+  $responseHeader = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
 
   $processingStatus = @{
     "functionName"     = $TriggerMetadata.functionName; 
@@ -65,34 +56,18 @@ function main() {
     "status"           = $statusObject.status; 
     "timestamp"        = $(Get-Date); 
     "response_message" = $statusObject.message;
-    "sample_json"      = @{
-      "p" = "2000";
-      "q" = "rainy";
-    };
   }
-
-  $sample_dict2 = @{
-    "year"    = "2100";
-    "weather" = "sunny";
-  }
-
-  # += adds additional key-value pairs to sample_json dict, need to see if it's at all needed..
-  # NOTE: mySbMsg parameter will interpret the JSON data as Hashtable/Dict
-  # That's why += operator will work there
-  $processingStatus.sample_json += $sample_dict2
-
-  $dummy_process_status = ConvertTo-Json $processingStatus
-  Write-Host $dummy_process_status
 
   # $mySbMsg.processingStatus += $processingStatus
 
-  # $Body = ConvertTo-Json $mySbMsg
+  # $responseBody = ConvertTo-Json $mySbMsg
 
   # Calling function send message back to topic
-  # sendResponse $header $Body
+  # sendResponse $responseHeader $responseBody
+  sendResponse $responseHeader
 
   Write-Host "Process Completed - $(Get-Date)"
-  Write-Host $mySbMsg.GetType()
+  # Write-Host $mySbMsg.GetType()
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
