@@ -13,8 +13,8 @@ $dlCreationObj = @{
 
 $statusObject = @{
   status     = "Complete"
-  statusCode = "200" 
-  message    = "Transaction Successful" 
+  statusCode = "200"
+  message    = "Transaction Successful"
 }
 
 # helper function to update statusObject
@@ -23,7 +23,7 @@ function setStatusObject() {
   $statusObject.status = $status
   $statusObject.statusCode = $statusCode
   $statusObject.message = $message
-} 
+}
 
 # setup the connection to exchange
 function ConnectionSetup() {
@@ -33,7 +33,7 @@ function ConnectionSetup() {
   }
   catch {
     Write-Error "$_"
-    setStatusObject "Error" "400" "Error: Could not connect to the Exchange. $_"
+    setStatusObject -status "Error" -statusCode "400" -message "Error in ConnectionSetup: $_"
   }
 }
 
@@ -45,7 +45,7 @@ function CreateDL() {
   }
   catch {
     Write-Error "$_"
-    setStatusObject "Error" "400" "Error: Could not create the DL. $_"
+    setStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
   }
 }
 
@@ -53,7 +53,7 @@ function CreateDL() {
 function RespondWithStatus() {
   $responseHeader = @{
     'requestState' = $statusObject.status
-    'requestType'  = 'yet-to-be-decided??' 
+    'requestType'  = 'yet-to-be-decided??'
   }
 
   $processingStatus = @{
@@ -67,22 +67,21 @@ function RespondWithStatus() {
   # $mySbMsg.processingStatus += $processingStatus
 
   # $responseBody = ConvertTo-Json $mySbMsg
-
-  # Calling function send message back to topic
+  # using Modules/sendResponse function to send message back to topic
   # sendResponse $responseHeader $responseBody
-  # sendResponse $responseHeader
+  sendResponse $responseHeader # dummy
 }
 
 function main() {
   Write-Host "Process Started - $(Get-Date)"
 
-  # connection setup
-  if ($statusObject.status -ne "Error") { ConnectionSetup }
+  # tries to setup a connection to Exchange Online
+  ConnectionSetup
 
   # dl creation
   if ($statusObject.status -ne "Error") { CreateDL }
 
-  # responding with execution status, message
+  # parses execution status/message and sends response
   RespondWithStatus
 
   Write-Host "Process Completed - $(Get-Date)"
