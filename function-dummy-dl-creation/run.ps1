@@ -6,7 +6,16 @@ Version: Under Development
 
 param($mySbMsg, $TriggerMetadata)
 
-$statusObject = @{status = "Complete"; statusCode = "200"; message = "Transaction Successful"; }
+$dlCreationObj = @{
+  "name"   = $mySbMsg.requestDetails.dl_name
+  "owners" = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+}
+
+$statusObject = @{
+  status     = "Complete"
+  statusCode = "200" 
+  message    = "Transaction Successful" 
+}
 
 # helper function to update statusObject
 function setStatusObject() {
@@ -20,7 +29,7 @@ function setStatusObject() {
 function ConnectionSetup() {
   try {
     Write-Host "Trying to setup connection.."
-    # Connect-ExchangeOnline ...
+    # Connect-ExchangeOnline ... yet to be completed
   }
   catch {
     Write-Error "$_"
@@ -31,8 +40,8 @@ function ConnectionSetup() {
 # creates a new distribution list
 function CreateDL() {
   try {
-    Write-Host "Trying to Add the DL.."
-    # New-DistributionGroup ...
+    Write-Host "Trying to create the DL.."
+    # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners
   }
   catch {
     Write-Error "$_"
@@ -42,14 +51,17 @@ function CreateDL() {
 
 # parses overall process status and sends response
 function RespondWithStatus() {
-  $responseHeader = @{'requestState' = $statusObject.status; 'requestType' = 'yet-to-be-decided??' }
+  $responseHeader = @{
+    'requestState' = $statusObject.status
+    'requestType'  = 'yet-to-be-decided??' 
+  }
 
   $processingStatus = @{
-    "functionName"     = $TriggerMetadata.functionName; 
-    "statusCode"       = $statusObject.statusCode; 
-    "status"           = $statusObject.status; 
-    "timestamp"        = $(Get-Date); 
-    "response_message" = $statusObject.message;
+    "functionName"     = $TriggerMetadata.functionName
+    "statusCode"       = $statusObject.statusCode
+    "status"           = $statusObject.status
+    "timestamp"        = $(Get-Date)
+    "response_message" = $statusObject.message
   }
 
   # $mySbMsg.processingStatus += $processingStatus
@@ -58,7 +70,7 @@ function RespondWithStatus() {
 
   # Calling function send message back to topic
   # sendResponse $responseHeader $responseBody
-  sendResponse $responseHeader
+  # sendResponse $responseHeader
 }
 
 function main() {
