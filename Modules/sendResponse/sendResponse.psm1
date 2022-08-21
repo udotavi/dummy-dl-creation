@@ -1,5 +1,5 @@
 function sendResponse {
   param($header)
-  Write-Host "Header is: "
+  Write-Host "Inside Modules/sendResponse function.."
   ConvertTo-Json $header | Write-Host
 }

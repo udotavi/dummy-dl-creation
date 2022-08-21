@@ -11,6 +11,15 @@ $dlCreationObj = @{
   "owners" = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
 }
 
+# {
+#   "request_id": "REQ2123123",
+#   "requestDetails":{
+#       "dl_name": "dummy_dl",
+#       "owner1": "dummy_owner1",
+#       "owner2": "dummy_owner2",
+#   }
+# }
+
 $statusObject = @{
   status     = "Complete"
   statusCode = "200"
@@ -41,6 +50,7 @@ function ConnectionSetup() {
 function CreateDL() {
   try {
     Write-Host "Trying to create the DL.."
+    Write-Host "DL Name:" $dlCreationObj.name ", Owners:" $dlCreationObj.owners
     # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners
   }
   catch {
