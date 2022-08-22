@@ -62,7 +62,7 @@ function ConnectionSetup() {
 # creates a new distribution list
 function CreateDL() {
   try {
-    setDlCreationObj # updating dl creation obj from payload
+    setDlCreationObj # updating dl creation obj from sbus message body
     Write-Host "Trying to create the DL.."
     Write-Host "DL Name:" $dlCreationObj.name ", SMTP Address:" $dlCreationObj.smtp_address ", Owners:" $dlCreationObj.owners
     # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
