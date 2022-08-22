@@ -37,6 +37,8 @@ function setDlCreationObj() {
   $dlCreationObj.name = "^" + $modified_dl_string
   $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
   $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+
+  return $true
 }
 
 # helper function to update statusObject
@@ -45,6 +47,8 @@ function setStatusObject() {
   $statusObject.status = $status
   $statusObject.statusCode = $statusCode
   $statusObject.message = $message
+
+  return $true
 }
 
 # setup the connection to exchange
