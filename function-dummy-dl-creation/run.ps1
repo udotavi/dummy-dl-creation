@@ -16,23 +16,27 @@ param($mySbMsg, $TriggerMetadata)
 #   }
 # }
 
-# removes unwanted characters from DL name
-function fixDlName() {
-  param($dl_name)
-
-  $new_dl_name = $dl_name -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
-  return $new_dl_name
-}
-
 $dlCreationObj = @{
-  "name"   = fixDlName -dl_name $mySbMsg.requestDetails.dl_name
-  "owners" = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+  "name"         = ""
+  "smtp_address" = ""
+  "owners"       = ""
 }
 
 $statusObject = @{
   status     = "Complete"
   statusCode = "200"
   message    = "Transaction Successful"
+}
+
+# helper function to update dlCreationObj
+function setDlCreationObj() {
+  $original_dl_string = $mySbMsg.requestDetails.dl_name
+  # removing unwanted characters and extra spaces from dl name string
+  $modified_dl_string = $original_dl_string -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
+
+  $dlCreationObj.name = "^" + $modified_dl_string
+  $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
+  $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
 }
 
 # helper function to update statusObject
@@ -58,9 +62,10 @@ function ConnectionSetup() {
 # creates a new distribution list
 function CreateDL() {
   try {
+    setDlCreationObj # updating dl creation obj from payload
     Write-Host "Trying to create the DL.."
-    Write-Host "DL Name:" $dlCreationObj.name ", Owners:" $dlCreationObj.owners
-    # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners
+    Write-Host "DL Name:" $dlCreationObj.name ", SMTP Address:" $dlCreationObj.smtp_address ", Owners:" $dlCreationObj.owners
+    # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"
