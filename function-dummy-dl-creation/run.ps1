@@ -6,11 +6,7 @@ Version: Under Development
 
 param($mySbMsg, $TriggerMetadata)
 
-$dlCreationObj = @{
-  "name"   = $mySbMsg.requestDetails.dl_name
-  "owners" = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
-}
-
+# example mySbMsg ..
 # {
 #   "request_id": "REQ2123123",
 #   "requestDetails":{
@@ -19,6 +15,19 @@ $dlCreationObj = @{
 #       "owner2": "dummy_owner2",
 #   }
 # }
+
+# removes unwanted characters from DL name
+function fixDlName() {
+  param($dl_name)
+
+  $new_dl_name = $dl_name -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
+  return $new_dl_name
+}
+
+$dlCreationObj = @{
+  "name"   = fixDlName -dl_name $mySbMsg.requestDetails.dl_name
+  "owners" = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+}
 
 $statusObject = @{
   status     = "Complete"
