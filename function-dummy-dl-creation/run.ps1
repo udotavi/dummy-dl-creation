@@ -37,8 +37,6 @@ function setDlCreationObj() {
   $dlCreationObj.name = "^" + $modified_dl_string
   $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
   $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
-
-  return $true
 }
 
 # helper function to update statusObject
@@ -47,8 +45,6 @@ function setStatusObject() {
   $statusObject.status = $status
   $statusObject.statusCode = $statusCode
   $statusObject.message = $message
-
-  return $true
 }
 
 # setup the connection to exchange
@@ -60,10 +56,7 @@ function ConnectionSetup() {
   catch {
     Write-Error "$_"
     setStatusObject -status "Error" -statusCode "400" -message "Error in ConnectionSetup: $_"
-    return $false
   }
-
-  return $true
 }
 
 # creates a new distribution list
@@ -77,10 +70,7 @@ function CreateDL() {
   catch {
     Write-Error "$_"
     setStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
-    return $false
   }
-
-  return $true
 }
 
 # parses overall process status and sends response
@@ -104,8 +94,6 @@ function RespondWithStatus() {
   # using Modules/sendResponse function to send message back to topic
   # sendResponse $responseHeader $responseBody
   sendResponse $responseHeader # dummy
-
-  return $true
 }
 
 function main() {
@@ -121,8 +109,6 @@ function main() {
   RespondWithStatus
 
   Write-Host "Process Completed - $(Get-Date)"
-
-  return $true
 }
 
 if ($MyInvocation.InvocationName -ne '.') {

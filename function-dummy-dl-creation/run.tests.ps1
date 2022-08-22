@@ -5,9 +5,15 @@ BeforeAll {
 Describe "Test: setDlCreationObj" {
   Context "Happy Path" {
     BeforeEach {
+      $mySbMsg = @{
+        "requestDetails" = @{
+          "dl_name" = "dummy_{dl}_name"
+        }
+      }
     }
     It "Test Case: 1" {
-      setDlCreationObj | Should -Be $true
+      setDlCreationObj
+      $dlCreationObj.name | Should -Be "^dummy_dl_name"
     }
   }
 }
@@ -17,7 +23,8 @@ Describe "Test: setStatusObject" {
     BeforeEach {
     }
     It "Test Case: 1" {
-      setStatusObject | Should -Be $true
+      setStatusObject -status "Error"
+      $statusObject.status | Should -Be "Error"
     }
   }
 }
@@ -26,10 +33,11 @@ Describe "Test: ConnectionSetup" {
   Context "Happy Path" {
     BeforeEach {
       # Mock Connect-ExchangeOnline
-      Mock setStatusObject
+      Mock Write-Host
     }
     It "Test Case: 1" {
-      ConnectionSetup | Should -Be $true
+      ConnectionSetup
+      Should -Invoke -CommandName Write-Host -Exactly -Times 1
     }
   }
 
@@ -39,7 +47,8 @@ Describe "Test: ConnectionSetup" {
       Mock setStatusObject
     }
     It "Test Case: 1" {
-      ConnectionSetup | Should -Be $false
+      ConnectionSetup
+      Should -Invoke -CommandName setStatusObject -Exactly -Times 1
     }
   }
 }
@@ -51,7 +60,8 @@ Describe "Test: CreateDL" {
       Mock setDlCreationObj
     }
     It "Test Case: 1" {
-      CreateDL | Should -Be $true
+      CreateDL
+      Should -Invoke -CommandName setDlCreationObj -Exactly -Times 1
     }
   }
 
@@ -61,7 +71,8 @@ Describe "Test: CreateDL" {
       Mock setStatusObject
     }
     It "Test Case: 1" {
-      CreateDL | Should -Be $false
+      CreateDL
+      Should -Invoke -CommandName setStatusObject -Exactly -Times 1
     }
   }
 }
@@ -75,7 +86,8 @@ Describe "Test: RespondWithStatus" {
       Mock sendResponse
     }
     It "Test Case: 1" {
-      RespondWithStatus | Should -Be $true
+      RespondWithStatus
+      Should -Invoke -CommandName sendResponse -Exactly -Times 1
     }
   }
 }
@@ -88,7 +100,8 @@ Describe "Test: Main Function" {
       Mock RespondWithStatus
     }
     It "Test Case: 1" {
-      main | Should -Be $true
+      main
+      Should -Invoke -CommandName ConnectionSetup -Exactly -Times 1
     }
   }
 }
