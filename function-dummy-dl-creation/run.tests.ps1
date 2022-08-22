@@ -23,8 +23,8 @@ Describe "Test: setStatusObject" {
     BeforeEach {
     }
     It "Test Case: 1" {
-      setStatusObject -status "Error"
-      $statusObject.status | Should -Be "Error"
+      setStatusObject -status "dummy_status"
+      $statusObject.status | Should -Be "dummy_status"
     }
   }
 }
@@ -44,11 +44,10 @@ Describe "Test: ConnectionSetup" {
   Context "Unhappy Path" {
     BeforeEach {
       Mock Write-Host { Throw 'Dummy Error' }
-      Mock setStatusObject
     }
     It "Test Case: 1" {
       ConnectionSetup
-      Should -Invoke -CommandName setStatusObject -Exactly -Times 1
+      $statusObject.status | Should -Be "Error"
     }
   }
 }
@@ -68,11 +67,10 @@ Describe "Test: CreateDL" {
   Context "Unhappy Path" {
     BeforeEach {
       Mock setDlCreationObj { Throw 'Dummy Error' }
-      Mock setStatusObject
     }
     It "Test Case: 1" {
       CreateDL
-      Should -Invoke -CommandName setStatusObject -Exactly -Times 1
+      $statusObject.status | Should -Be "Error"
     }
   }
 }
