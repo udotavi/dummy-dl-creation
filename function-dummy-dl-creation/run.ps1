@@ -51,12 +51,15 @@ function setStatusObject() {
 function ConnectionSetup() {
   try {
     Write-Host "Trying to setup connection.."
-    # Connect-ExchangeOnline ... yet to be completed
+    # Connect-ExchangeOnline # ... yet to be completed
   }
   catch {
     Write-Error "$_"
     setStatusObject -status "Error" -statusCode "400" -message "Error in ConnectionSetup: $_"
+    return $false
   }
+
+  return $true
 }
 
 # creates a new distribution list
@@ -70,7 +73,10 @@ function CreateDL() {
   catch {
     Write-Error "$_"
     setStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
+    return $false
   }
+
+  return $true
 }
 
 # parses overall process status and sends response
@@ -94,6 +100,8 @@ function RespondWithStatus() {
   # using Modules/sendResponse function to send message back to topic
   # sendResponse $responseHeader $responseBody
   sendResponse $responseHeader # dummy
+
+  return $true
 }
 
 function main() {
@@ -109,6 +117,8 @@ function main() {
   RespondWithStatus
 
   Write-Host "Process Completed - $(Get-Date)"
+
+  return $true
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
