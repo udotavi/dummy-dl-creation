@@ -66,7 +66,7 @@ function ConnectionSetup() {
     
     $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $username, $password
     Connect-ExchangeOnline -Credential $credential
-    Get-User
+    (Get-User -Filter "DisplayName -eq 'roger federer'").FirstName | Write-Host
     Disconnect-ExchangeOnline -Confirm:$false
   }
   catch {
