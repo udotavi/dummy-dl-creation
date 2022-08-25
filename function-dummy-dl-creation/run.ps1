@@ -47,11 +47,27 @@ function setStatusObject() {
   $statusObject.message = $message
 }
 
+# gets values/secrets from azure key vault
+function GetFromVault() {
+  param($secret_name)
+  $secretText = Get-AzKeyVaultSecret -VaultName 'keyvault-dl-creation' -Name $secret_name -AsPlainText
+  return $secretText
+}
+
 # setup the connection to exchange
 function ConnectionSetup() {
   try {
     Write-Host "Trying to setup connection.."
-    # Connect-ExchangeOnline # ... yet to be completed
+    Connect-AzAccount -Identity
+    $username = GetFromVault "dl-project-username"
+    $passwordString = GetFromVault "dl-project-password"
+    $password = ConvertTo-SecureString $passwordString -AsPlainText -Force
+    Write-Host "Username/Password:" $username $password
+    
+    $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $username, $password
+    Connect-ExchangeOnline -Credential $credential
+    Get-User
+    Disconnect-ExchangeOnline -Confirm:$false
   }
   catch {
     Write-Error "$_"
@@ -103,10 +119,10 @@ function main() {
   ConnectionSetup
 
   # dl creation
-  if ($statusObject.status -ne "Error") { CreateDL }
+  # if ($statusObject.status -ne "Error") { CreateDL }
 
   # parses execution status/message and sends response
-  RespondWithStatus
+  # RespondWithStatus
 
   Write-Host "Process Completed - $(Get-Date)"
 }
