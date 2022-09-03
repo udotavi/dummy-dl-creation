@@ -1,7 +1,15 @@
 <#
-Description: Creates a DL in Exchange 365
-Date: 19th Aug, 2022
-Version: Under Development
+  .SYNOPSIS
+  Short Description..
+
+  .Description
+  Creates a DL in Exchange 365
+  19th Aug, 2022
+  Under Development
+
+  .EXAMPLE
+  Some example..
+  #!!!!!!!!!!!!!!!!!!!! replace the Write-Output with write-output
 #>
 
 param($mySbMsg, $TriggerMetadata)
@@ -28,8 +36,8 @@ $statusObject = @{
   message    = "Transaction Successful"
 }
 
-# helper function to update dlCreationObj
-function setDlCreationObj() {
+function SetDlCreationObj() {
+  # helper function to update dlCreationObj
   $original_dl_string = $mySbMsg.requestDetails.dl_name
   # removing unwanted characters and extra spaces from dl name string
   $modified_dl_string = $original_dl_string -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
@@ -37,60 +45,87 @@ function setDlCreationObj() {
   $dlCreationObj.name = "^" + $modified_dl_string
   $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
   $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+
+  Write-Output "DL Name:" $dlCreationObj.name ", SMTP Address:" $dlCreationObj.smtp_address ", Owners:" $dlCreationObj.owners
 }
 
-# helper function to update statusObject
-function setStatusObject() {
+function SetStatusObject() {
+  # helper function to update statusObject
   param($status, $statusCode, $message)
+
+  Write-Output "$status : $statusCode - $message"
   $statusObject.status = $status
   $statusObject.statusCode = $statusCode
-  $statusObject.message = $message
+  $statusObject.message += ", " + $message
 }
 
-# gets values/secrets from azure key vault
 function GetFromVault() {
-  param($secret_name)
-  $secretText = Get-AzKeyVaultSecret -VaultName 'keyvault-dl-creation' -Name $secret_name -AsPlainText
-  return $secretText
+  # gets values/secrets from azure key vault
+  param($VaultSecretName)
+
+  $vaultName = $ENV:KEYVAULT_NAME
+  $vaultSecret = Get-AzKeyVaultSecret -VaultName $vaultName -Name $vaultSecretName -AsPlainText
+  return $vaultSecret
 }
 
-# setup the connection to exchange
-function ConnectionSetup() {
+function SetupConnection() {
+  # setup the connection to exchange
   try {
-    Write-Host "Trying to setup connection.."
+    Write-Output "Trying to setup connection to AzAccount.."
     Connect-AzAccount -Identity
-    $username = GetFromVault "dl-project-username"
-    $passwordString = GetFromVault "dl-project-password"
-    $password = ConvertTo-SecureString $passwordString -AsPlainText -Force
-    Write-Host "Username/Password:" $username $password
+
+    $vaultSecretName = $ENV:KEYVAULT_SECRET
+    # getting the certificate from the vault as a string
+    $vaultSecret = GetFromVault -VaultSecretName $vaultSecretName
+    # creating a certificate object from vaultSecret
+    $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2([System.Convert]::FromBase64String($vaultSecret), "", "MachineKeySet")
     
-    $credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $username, $password
-    Connect-ExchangeOnline -Credential $credential
-    (Get-User -Filter "DisplayName -eq 'roger federer'").FirstName | Write-Host
-    Disconnect-ExchangeOnline -Confirm:$false
+    # ?? where to store the app id and the org value ??
+    Connect-ExchangeOnline -Certificate $certificate -AppId "app_id" -Organization "dummy_org"
   }
   catch {
     Write-Error "$_"
-    setStatusObject -status "Error" -statusCode "400" -message "Error in ConnectionSetup: $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Count not setup connection: $_"
   }
 }
 
-# creates a new distribution list
+function IsUniqueDL() {
+  # checks if the dl already exists
+  $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($dlCreationObj.name)'"
+
+  if ($dlUnique -ne "") {
+    SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($dlCreationObj.name) already exists"
+  }
+}
+
+function FindOwners() {
+  # checks if the dl already exists
+  $owner1 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner1)'"
+  $owner2 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner2)'"
+
+  if ($owner1 -eq "") {
+    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $owner1 not found"
+  }
+
+  if ($owner2 -eq "") {
+    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $owner2 not found"
+  }
+}
+
 function CreateDL() {
+  # creates a new distribution list
   try {
-    setDlCreationObj # updating dl creation obj from sbus message body
-    Write-Host "Trying to create the DL.."
-    Write-Host "DL Name:" $dlCreationObj.name ", SMTP Address:" $dlCreationObj.smtp_address ", Owners:" $dlCreationObj.owners
-    # New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
+    Write-Output "Trying to create the DL.."
+    New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"
-    setStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
   }
 }
 
-# parses overall process status and sends response
 function RespondWithStatus() {
+  # parses overall process status and sends response
   $responseHeader = @{
     'requestState' = $statusObject.status
     'requestType'  = 'yet-to-be-decided??'
@@ -104,31 +139,54 @@ function RespondWithStatus() {
     "response_message" = $statusObject.message
   }
 
-  # $mySbMsg.processingStatus += $processingStatus
+  $mySbMsg.processingStatus += $processingStatus
 
-  # $responseBody = ConvertTo-Json $mySbMsg
+  $responseBody = ConvertTo-Json $mySbMsg
   # using Modules/sendResponse function to send message back to topic
-  # sendResponse $responseHeader $responseBody
-  sendResponse $responseHeader # dummy
+  sendResponse $responseHeader $responseBody
 }
 
-function main() {
-  Write-Host "Process Started - $(Get-Date)"
+function TerminateConnection() {
+  # closes the connections with Az and Exchange
+  try {
+    Disconnect-ExchangeOnline -Confirm:$false
+    Disconnect-AzAccount -Confirm:$false
+  }
+  catch {
+    Write-Error "$_"
+  }
+}
 
-  # tries to setup a connection to Exchange Online
-  ConnectionSetup
+function Main() {
+  Write-Output "Process Started - $(Get-Date)"
+
+  # updating dl creation obj from sbus message body
+  SetDlCreationObj
+
+  # tries to setup all the connections
+  SetupConnection
+
+  if ($statusObject.status -ne "Error") { 
+    # checks if the DL is unique
+    IsUniqueDL
+    # checks is the owners can be found
+    FindOwners
+  }
 
   # dl creation
-  # if ($statusObject.status -ne "Error") { CreateDL }
+  if ($statusObject.status -ne "Error") { CreateDL }
 
   # parses execution status/message and sends response
-  # RespondWithStatus
+  RespondWithStatus
 
-  Write-Host "Process Completed - $(Get-Date)"
+  # terminates the Az, Exchange connections
+  TerminateConnection
+
+  Write-Output "Process Completed - $(Get-Date)"
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-  main
+  Main
 }
 
 #end
