@@ -20,7 +20,7 @@ param($mySbMsg, $TriggerMetadata)
 #   "requestDetails":{
 #       "dl_name": "dummy_dl",
 #       "owner1": "dummy_owner1",
-#       "owner2": "dummy_owner2",
+#       "owner2": "dummy_owner2"
 #   }
 # }
 
@@ -47,7 +47,7 @@ function SetDlCreationObj() {
   $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
   $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
 
-  Write-Output "DL Name:" $dlCreationObj.name ", SMTP Address:" $dlCreationObj.smtp_address ", Owners:" $dlCreationObj.owners
+  Write-Output "DL Name: $($dlCreationObj.name) , SMTP Address: $($dlCreationObj.smtp_address) , Owners: $($dlCreationObj.owners)"
 }
 
 function SetStatusObject() {
@@ -117,8 +117,9 @@ function CreateDL() {
   # creates a new distribution list
   try {
     Write-Output "Trying to create the DL.."
-    New-DistributionGroup -Name $dlCreationObj.name 
-    -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
+    New-DistributionGroup -Name $dlCreationObj.name `
+      -ManagedBy $dlCreationObj.owners `
+      -PrimarySmtpAddress $dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"
@@ -159,8 +160,10 @@ function Main() {
   # parses execution status/message and sends response
   $requestType = "dummy_req_type"
   # sourcing SendParseResponse from Modules
-  SendParsedResponse -FunctionName $TriggerMetadata.functionName 
-  -MySbusMsg $mySbMsg -RequestType $requestType -StatusObj $StatusObject
+  SendParsedResponse -FunctionName $TriggerMetadata.functionName `
+    -MySbusMsg $mySbMsg `
+    -RequestType $requestType `
+    -StatusObj $StatusObject
 
   # terminates the Az, Exchange connections
   # TerminateConnection
