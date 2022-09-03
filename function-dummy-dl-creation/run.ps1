@@ -43,6 +43,7 @@ function SetDlCreationObj() {
   $modified_dl_string = $original_dl_string -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
 
   $dlCreationObj.name = "^" + $modified_dl_string
+  # ?? what should be the mail domain value ??
   $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
   $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
 
@@ -85,7 +86,7 @@ function SetupConnection() {
   }
   catch {
     Write-Error "$_"
-    SetStatusObject -status "Error" -statusCode "400" -message "Count not setup connection: $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Cound not setup connection: $_"
   }
 }
 
