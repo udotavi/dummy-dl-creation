@@ -21,7 +21,11 @@ param($mySbMsg, $TriggerMetadata)
 #       "dl_name": "dummy_dl",
 #       "owner1": "dummy_owner1",
 #       "owner2": "dummy_owner2"
+#   },
+#   "processingStatus":[{
+#       "key1": "value1"
 #   }
+#   ]
 # }
 
 $dlCreationObj = @{
