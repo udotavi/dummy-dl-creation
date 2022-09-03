@@ -30,7 +30,7 @@ $dlCreationObj = @{
   "owners"       = ""
 }
 
-$statusObject = @{
+$StatusObject = @{
   status     = "Complete"
   statusCode = "200"
   message    = "Transaction Successful"
@@ -51,13 +51,13 @@ function SetDlCreationObj() {
 }
 
 function SetStatusObject() {
-  # helper function to update statusObject
+  # helper function to update StatusObject
   param($status, $statusCode, $message)
 
   Write-Output "$status : $statusCode - $message"
-  $statusObject.status = $status
-  $statusObject.statusCode = $statusCode
-  $statusObject.message += ", " + $message
+  $StatusObject.status = $status
+  $StatusObject.statusCode = $statusCode
+  $StatusObject.message += ", " + $message
 }
 
 function GetFromVault() {
@@ -117,34 +117,13 @@ function CreateDL() {
   # creates a new distribution list
   try {
     Write-Output "Trying to create the DL.."
-    New-DistributionGroup -Name $dlCreationObj.name -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
+    New-DistributionGroup -Name $dlCreationObj.name 
+    -ManagedBy $dlCreationObj.owners -PrimarySmtpAddress $dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"
     SetStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
   }
-}
-
-function RespondWithStatus() {
-  # parses overall process status and sends response
-  $responseHeader = @{
-    'requestState' = $statusObject.status
-    'requestType'  = 'yet-to-be-decided??'
-  }
-
-  $processingStatus = @{
-    "functionName"     = $TriggerMetadata.functionName
-    "statusCode"       = $statusObject.statusCode
-    "status"           = $statusObject.status
-    "timestamp"        = $(Get-Date)
-    "response_message" = $statusObject.message
-  }
-
-  $mySbMsg.processingStatus += $processingStatus
-
-  $responseBody = ConvertTo-Json $mySbMsg
-  # using Modules/sendResponse function to send message back to topic
-  sendResponse $responseHeader $responseBody
 }
 
 function TerminateConnection() {
@@ -165,23 +144,26 @@ function Main() {
   SetDlCreationObj
 
   # tries to setup all the connections
-  SetupConnection
+  # SetupConnection
 
-  if ($statusObject.status -ne "Error") { 
-    # checks if the DL is unique
-    IsUniqueDL
-    # checks is the owners can be found
-    FindOwners
-  }
+  # if ($StatusObject.status -ne "Error") { 
+  #   # checks if the DL is unique
+  #   IsUniqueDL
+  #   # checks is the owners can be found
+  #   FindOwners
+  # }
 
   # dl creation
-  if ($statusObject.status -ne "Error") { CreateDL }
+  # if ($StatusObject.status -ne "Error") { CreateDL }
 
   # parses execution status/message and sends response
-  RespondWithStatus
+  $requestType = "dummy_req_type"
+  # sourcing SendParseResponse from Modules
+  SendParsedResponse -FunctionName $TriggerMetadata.functionName 
+  -MySbusMsg $mySbMsg -RequestType $requestType -StatusObj $StatusObject
 
   # terminates the Az, Exchange connections
-  TerminateConnection
+  # TerminateConnection
 
   Write-Output "Process Completed - $(Get-Date)"
 }
