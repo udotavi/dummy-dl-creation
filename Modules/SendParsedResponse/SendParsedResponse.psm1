@@ -15,6 +15,8 @@ function SendParsedResponse() {
   }
 
   $MySbusMsg.processingStatus += $processingStatus
+
+  Get-Pocus
   
   $responseBody = ConvertTo-Json $MySbusMsg
   # using Modules/sendResponse function to send message back to topic
