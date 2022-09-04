@@ -3,13 +3,13 @@ BeforeAll {
   Import-Module -Name "$PSScriptRoot/../sendResponse/sendResponse.psm1" -Force
 }
 
-Describe "Test: dummy" {
-  Context "dummy context" {
+Describe "SendParsedResponse" {
+  Context "Context: 1" {
     BeforeAll {
       Mock -ModuleName SendParsedResponse sendResponse {}
       $result=SendParsedResponse "dummy" @{"processingStatus" = @{"key" = "value" } } "dummy" "dummy"
     }
-    It "Test Case: dummy" {
+    It "Test Case: 1" {
       Should -Invoke sendResponse -ModuleName SendParsedResponse -Times 1 -Scope Context
     }
   }

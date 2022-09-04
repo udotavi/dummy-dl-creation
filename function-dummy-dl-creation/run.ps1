@@ -149,17 +149,17 @@ function Main() {
   SetDlCreationObj
 
   # tries to setup all the connections
-  # SetupConnection
+  SetupConnection
 
-  # if ($StatusObject.status -ne "Error") { 
-  #   # checks if the DL is unique
-  #   IsUniqueDL
-  #   # checks is the owners can be found
-  #   FindOwners
-  # }
+  if ($StatusObject.status -ne "Error") { 
+    # checks if the DL is unique
+    IsUniqueDL
+    # checks is the owners can be found
+    FindOwners
+  }
 
   # dl creation
-  # if ($StatusObject.status -ne "Error") { CreateDL }
+  if ($StatusObject.status -ne "Error") { CreateDL }
 
   # parses execution status/message and sends response
   $requestType = "dummy_req_type"
@@ -170,7 +170,7 @@ function Main() {
     -StatusObj $StatusObject
 
   # terminates the Az, Exchange connections
-  # TerminateConnection
+  TerminateConnection
 
   Write-Output "Process Completed - $(Get-Date)"
 }
