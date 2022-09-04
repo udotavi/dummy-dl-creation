@@ -28,13 +28,13 @@ param($mySbMsg, $TriggerMetadata)
 #   ]
 # }
 
-$dlCreationObj = @{
+$global:dlCreationObj = @{
   "name"         = ""
   "smtp_address" = ""
   "owners"       = ""
 }
 
-$StatusObject = @{
+$global:StatusObject = @{
   status     = "Complete"
   statusCode = "200"
   message    = "Transaction Successful"
@@ -46,12 +46,12 @@ function SetDlCreationObj() {
   # removing unwanted characters and extra spaces from dl name string
   $modified_dl_string = $original_dl_string -replace "[^a-zA-Z0-9 .\-_']", "" -replace "\s+", " "
 
-  $dlCreationObj.name = "^" + $modified_dl_string
+  $global:dlCreationObj.name = "^" + $modified_dl_string
   # ?? what should be the mail domain value ??
-  $dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
-  $dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
+  $global:dlCreationObj.smtp_address = ($modified_dl_string -replace "\s+", "") + "@example.com"
+  $global:dlCreationObj.owners = $mySbMsg.requestDetails.owner1 + "," + $mySbMsg.requestDetails.owner2
 
-  Write-Output "DL Name: $($dlCreationObj.name) , SMTP Address: $($dlCreationObj.smtp_address) , Owners: $($dlCreationObj.owners)"
+  Write-Output "DL Name: $($global:dlCreationObj.name) , SMTP Address: $($global:dlCreationObj.smtp_address) , Owners: $($global:dlCreationObj.owners)"
 }
 
 function SetStatusObject() {
@@ -59,9 +59,9 @@ function SetStatusObject() {
   param($status, $statusCode, $message)
 
   Write-Output "$status : $statusCode - $message"
-  $StatusObject.status = $status
-  $StatusObject.statusCode = $statusCode
-  $StatusObject.message += ", " + $message
+  $global:StatusObject.status = $status
+  $global:StatusObject.statusCode = $statusCode
+  $global:StatusObject.message += ", " + $message
 }
 
 function GetFromVault() {
@@ -96,10 +96,10 @@ function SetupConnection() {
 
 function IsUniqueDL() {
   # checks if the dl already exists
-  $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($dlCreationObj.name)'"
+  $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($global:dlCreationObj.name)'"
 
   if ($dlUnique -ne "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($dlCreationObj.name) already exists"
+    SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($global:dlCreationObj.name) already exists"
   }
 }
 
@@ -121,9 +121,9 @@ function CreateDL() {
   # creates a new distribution list
   try {
     Write-Output "Trying to create the DL.."
-    New-DistributionGroup -Name $dlCreationObj.name `
-      -ManagedBy $dlCreationObj.owners `
-      -PrimarySmtpAddress $dlCreationObj.smtp_address
+    New-DistributionGroup -Name $global:dlCreationObj.name `
+      -ManagedBy $global:dlCreationObj.owners `
+      -PrimarySmtpAddress $global:dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"

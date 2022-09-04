@@ -1,7 +1,6 @@
 function SendParsedResponse() {
   # parses overall process status and sends response
   param($FunctionName, $MySbusMsg, $RequestType, $StatusObj)
-
   $responseHeader = @{
     'requestState' = $StatusObj.status
     'requestType'  = $RequestType
@@ -16,7 +15,7 @@ function SendParsedResponse() {
   }
 
   $MySbusMsg.processingStatus += $processingStatus
-
+  
   $responseBody = ConvertTo-Json $MySbusMsg
   # using Modules/sendResponse function to send message back to topic
   sendResponse $responseHeader $responseBody
