@@ -41,10 +41,10 @@ Describe "GetFromVault" {
   Context "Context: 1" {
     BeforeAll {
       $ENV:key_vault_name = "dummy_key_vault_name"
-      Mock Get-AzKeyVaultSecret { return "secret_value"}
-      $returnValue=GetFromVault "dummy_secret_name"
+      Mock Get-AzKeyVaultSecret { return "secret_value" }
     }
     It "Test Case: 1" {
+      $returnValue = GetFromVault "dummy_secret_name"
       Should -Invoke -CommandName Get-AzKeyVaultSecret -Exactly -Times 1 -Scope Context
       $returnValue | Should -Be "secret_value"
     }

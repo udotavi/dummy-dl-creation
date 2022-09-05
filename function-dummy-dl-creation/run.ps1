@@ -148,6 +148,7 @@ function Main() {
   # updating dl creation obj from sbus message body
   SetDlCreationObj
 
+  <#
   # tries to setup all the connections
   SetupConnection
 
@@ -171,7 +172,7 @@ function Main() {
 
   # terminates the Az, Exchange connections
   TerminateConnection
-
+  #>
   Write-Output "Process Completed - $(Get-Date)"
 }
 
