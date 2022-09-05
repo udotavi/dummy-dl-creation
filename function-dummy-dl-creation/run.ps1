@@ -18,7 +18,7 @@ param($mySbMsg, $TriggerMetadata)
 # {
 #   "request_id": "REQ2123123",
 #   "requestDetails":{
-#       "dl_name": "dummy_dl",
+#       "dl_name": "dummy.DL@_13",
 #       "owner1": "dummy_owner1",
 #       "owner2": "dummy_owner2"
 #   },
@@ -58,10 +58,12 @@ function SetStatusObject() {
   # helper function to update StatusObject
   param($status, $statusCode, $message)
 
-  Write-Output "$status : $statusCode - $message"
+  # Write-Output "$status : $statusCode - $message"
   $global:StatusObject.status = $status
   $global:StatusObject.statusCode = $statusCode
   $global:StatusObject.message += ", " + $message
+
+  Write-Output $global:StatusObject
 }
 
 function GetFromVault() {
@@ -82,11 +84,12 @@ function SetupConnection() {
     $vaultSecretName = $ENV:app_certificate # need to change the env var name
     # getting the certificate from the vault as a string
     $secretCertificateString = GetFromVault -VaultSecretName $vaultSecretName
+    Write-Output $secretCertificateString
     # creating a certificate object from vaultSecret
-    $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2([System.Convert]::FromBase64String($secretCertificateString), "", "MachineKeySet")
+    # $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2([System.Convert]::FromBase64String($secretCertificateString), "", "MachineKeySet")
     
     # ?? where to store the app id and the org value ??
-    Connect-ExchangeOnline -Certificate $certificate -AppId "app_id" -Organization "dummy_org"
+    # Connect-ExchangeOnline -Certificate $certificate -AppId "app_id" -Organization "dummy_org"
   }
   catch {
     Write-Error "$_"
@@ -96,7 +99,8 @@ function SetupConnection() {
 
 function IsUniqueDL() {
   # checks if the dl already exists
-  $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($global:dlCreationObj.name)'"
+  # $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($global:dlCreationObj.name)'"
+  $dlUnique = "not null"
 
   if ($dlUnique -ne "") {
     SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($global:dlCreationObj.name) already exists"
@@ -105,15 +109,17 @@ function IsUniqueDL() {
 
 function FindOwners() {
   # checks if the dl already exists
-  $owner1 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner1)'"
-  $owner2 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner2)'"
+  # $owner1 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner1)'"
+  $owner1 = ""
+  # $owner2 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner2)'"
+  $owner2 = ""
 
   if ($owner1 -eq "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $owner1 not found"
+    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner1) not found"
   }
 
   if ($owner2 -eq "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $owner2 not found"
+    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner2) not found"
   }
 }
 
@@ -121,13 +127,13 @@ function CreateDL() {
   # creates a new distribution list
   try {
     Write-Output "Trying to create the DL.."
-    New-DistributionGroup -Name $global:dlCreationObj.name `
-      -ManagedBy $global:dlCreationObj.owners `
-      -PrimarySmtpAddress $global:dlCreationObj.smtp_address
+    # New-DistributionGroup -Name $global:dlCreationObj.name `
+    #   -ManagedBy $global:dlCreationObj.owners `
+    #   -PrimarySmtpAddress $global:dlCreationObj.smtp_address
   }
   catch {
     Write-Error "$_"
-    SetStatusObject -status "Error" -statusCode "400" -message "Error in CreateDL: $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Error during the DL creation: $_"
   }
 }
 
@@ -148,7 +154,6 @@ function Main() {
   # updating dl creation obj from sbus message body
   SetDlCreationObj
 
-  <#
   # tries to setup all the connections
   SetupConnection
 
@@ -162,6 +167,7 @@ function Main() {
   # dl creation
   if ($StatusObject.status -ne "Error") { CreateDL }
 
+  
   # parses execution status/message and sends response
   $requestType = "dummy_req_type"
   # sourcing SendParseResponse from Modules
@@ -170,8 +176,11 @@ function Main() {
     -RequestType $requestType `
     -StatusObj $StatusObject
 
+  <#
+
   # terminates the Az, Exchange connections
   TerminateConnection
+
   #>
   Write-Output "Process Completed - $(Get-Date)"
 }
