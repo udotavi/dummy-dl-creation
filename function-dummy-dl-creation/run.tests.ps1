@@ -1,5 +1,16 @@
 BeforeAll {
   . $PSScriptRoot/run.ps1
+  New-Module -Name DummyModule -ScriptBlock {
+    function Get-AzKeyVaultSecret () {}
+    function Connect-AzAccount () {}
+    function Connect-ExchangeOnline () {}
+    function Get-DistributionGroup () {}
+    function Get-EXORecipient () {}
+    function New-DistributionGroup () {}
+    function Disconnect-ExchangeOnline () {}
+    function Disconnect-AzAccount () {}
+    function SendParsedResponse () {}
+  } | Import-Module
 }
 
 Describe "SetDlCreationObj" {
@@ -61,9 +72,6 @@ Describe "SetupConnection" {
 Describe "IsUniqueDL" {
   Context "Context: 1" {
     BeforeAll {
-      function Get-DistributionGroup (){
-        # dummy function
-      }
       Mock Get-DistributionGroup { return "not empty" }
       Mock SetStatusObject
 
@@ -91,12 +99,7 @@ Describe "FindOwners" {
 Describe "CreateDL" {
   Context "Context: 1" {
     BeforeAll {
-      function New-DistributionGroup () {
-        # dummy function
-      }
-      # Mock New-DistributionGroup
       Mock SetStatusObject
-
       Mock New-DistributionGroup { throw "dummy_error" }
 
       CreateDL
@@ -131,9 +134,6 @@ Describe "Main" {
       Mock FindOwners
       Mock SetupConnection
       Mock CreateDL
-      function SendParsedResponse() {
-        # dummy function
-      }
       Mock SendParsedResponse
       Mock TerminateConnection
 
@@ -144,4 +144,8 @@ Describe "Main" {
       Should -Invoke -CommandName SendParsedResponse -Exactly -Times 1 -Scope Context
     }
   }
+}
+
+AfterAll {
+  Remove-Module DummyModule
 }
