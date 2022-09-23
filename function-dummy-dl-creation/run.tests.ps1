@@ -10,6 +10,7 @@ BeforeAll {
     function Disconnect-ExchangeOnline () {}
     function Disconnect-AzAccount () {}
     function SendParsedResponse () {}
+    function ConnectToExchange () {}
   } | Import-Module
 }
 
@@ -37,30 +38,14 @@ Describe "SetStatusObject" {
   }
 }
 
-Describe "GetFromVault" {
-  Context "Context: 1" {
-    BeforeAll {
-      $ENV:key_vault_name = "dummy_key_vault_name"
-      Mock Get-AzKeyVaultSecret { return "secret_value" }
-    }
-    It "Test Case: 1" {
-      $returnValue = GetFromVault "dummy_secret_name"
-      Should -Invoke -CommandName Get-AzKeyVaultSecret -Exactly -Times 1 -Scope Context
-      $returnValue | Should -Be "secret_value"
-    }
-  }
-}
-
 Describe "SetupConnection" {
   Context "Context: 1" {
     BeforeAll {
       Mock Connect-AzAccount
-      # using a dummy base64 string
-      Mock GetFromVault { return "eL78WIArGQ7bC44Ozr0yvUBkz9oc5YlsENYJilInSP==" }
-      Mock New-Object
-      Mock Connect-ExchangeOnline { throw "dummy_error" }
       Mock SetStatusObject
+      Mock ConnectToExchange { throw "dummy error" }
 
+      # execute function
       SetupConnection
     }
     It "Test Case: 1" {

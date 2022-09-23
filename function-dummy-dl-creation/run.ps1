@@ -66,30 +66,15 @@ function SetStatusObject() {
   Write-Output $global:StatusObject
 }
 
-function GetFromVault() {
-  # gets values/secrets from azure key vault
-  param($VaultSecretName)
-
-  $vaultName = $ENV:key_vault_name # need to change the env var name
-  $vaultSecret = Get-AzKeyVaultSecret -VaultName $vaultName -Name $vaultSecretName -AsPlainText
-  return $vaultSecret
-}
-
 function SetupConnection() {
   # setup the connection to exchange
   try {
     Write-Output "Trying to setup connection to AzAccount.."
     Connect-AzAccount -Identity
 
-    $vaultSecretName = $ENV:app_certificate # need to change the env var name
-    # getting the certificate from the vault as a string
-    $secretCertificateString = GetFromVault -VaultSecretName $vaultSecretName
-    
-    # creating a certificate object from vaultSecret
-    $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2([System.Convert]::FromBase64String($secretCertificateString), "", "MachineKeySet")
-    
-    # ?? where to store the app id and the org value ??
-    Connect-ExchangeOnline -Certificate $certificate -AppId "app_id" -Organization "dummy_org"
+    $vaultCertificateName = $ENV:app_certificate_name # need to change the env var name
+    # connecting to exchange online
+    ConnectToExchange -appId "dummy_app_id" -organization "dummy_org" -vaultCertificateName $vaultCertificateName
   }
   catch {
     Write-Error "$_"
