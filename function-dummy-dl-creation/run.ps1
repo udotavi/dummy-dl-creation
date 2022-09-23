@@ -83,25 +83,36 @@ function SetupConnection() {
 }
 
 function IsUniqueDL() {
-  # checks if the dl already exists
-  $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($global:dlCreationObj.name)'"
-
-  if ($dlUnique -ne "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($global:dlCreationObj.name) already exists"
+  try {
+    # checks if the dl already exists
+    $dlUnique = Get-DistributionGroup -Filter "DisplayName -eq '$($global:dlCreationObj.name)'"
+    if ($dlUnique -ne "") {
+      SetStatusObject -status "Error" -statusCode "400" -message "DL name - $($global:dlCreationObj.name) already exists"
+    }
+  }
+  catch {
+    Write-Error "Exception Occured in IsUniqueDL function. $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Exception Occured in IsUniqueDL function. $_"
   }
 }
 
 function FindOwners() {
-  # checks if the dl already exists
-  $owner1 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner1)'"
-  $owner2 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner2)'"
+  try {
+    # checks if the dl already exists
+    $owner1 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner1)'"
+    $owner2 = Get-EXORecipient -Filter "DisplayName -eq '$($mySbMsg.requestDetails.owner2)'"
+    
+    if ($owner1 -eq "") {
+      SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner1) not found"
+    }
 
-  if ($owner1 -eq "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner1) not found"
+    if ($owner2 -eq "") {
+      SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner2) not found"
+    }
   }
-
-  if ($owner2 -eq "") {
-    SetStatusObject -status "Error" -statusCode "400" -message "Owner - $($mySbMsg.requestDetails.owner2) not found"
+  catch {
+    Write-Error "Exception Occured in FindOwners function. $_"
+    SetStatusObject -status "Error" -statusCode "400" -message "Exception Occured in FindOwners function. $_"
   }
 }
 
