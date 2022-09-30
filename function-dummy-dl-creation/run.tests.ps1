@@ -43,12 +43,19 @@ Describe "SetupConnection" {
     BeforeAll {
       Mock Connect-AzAccount
       Mock SetStatusObject
+    }
+    It "Test Case: 1" {
+      Mock ConnectToExchange { }
+
+      # execute function
+      SetupConnection
+      Should -Invoke -CommandName ConnectToExchange -Exactly -Times 1 -Scope Context
+    }
+    It "Test Case: 2" {
       Mock ConnectToExchange { throw "dummy error" }
 
       # execute function
       SetupConnection
-    }
-    It "Test Case: 1" {
       Should -Invoke -CommandName SetStatusObject -Exactly -Times 1 -Scope Context
     }
   }
@@ -57,13 +64,18 @@ Describe "SetupConnection" {
 Describe "IsUniqueDL" {
   Context "Context: 1" {
     BeforeAll {
-      Mock Get-DistributionGroup { return "not empty" }
       Mock SetStatusObject
-
-      IsUniqueDL
+      Mock Write-Host
     }
     It "Test Case: 1" {
+      Mock Get-DistributionGroup { return "not empty" }
+      IsUniqueDL
       Should -Invoke -CommandName Get-DistributionGroup -Exactly -Times 1 -Scope Context
+    }
+    It "Test Case: 2" {
+      Mock Get-DistributionGroup { throw "dummy_error" }
+      IsUniqueDL
+      Should -Invoke -CommandName Write-Host -Exactly -Times 1 -Scope Context
     }
   }
 }
@@ -72,11 +84,17 @@ Describe "FindOwners" {
   Context "Context: 1" {
     BeforeAll {
       Mock SetStatusObject
-      Mock Get-EXORecipient { return "" }
-      FindOwners
+      Mock Write-Host
     }
     It "Test Case: 1" {
+      Mock Get-EXORecipient { return "" }
+      FindOwners
       Should -Invoke -CommandName Get-EXORecipient -Exactly -Times 2 -Scope Context
+    }
+    It "Test Case: 2" {
+      Mock Get-EXORecipient { throw "dummy_error" }
+      FindOwners
+      Should -Invoke -CommandName Write-Host -Exactly -Times 1 -Scope Context
     }
   }
 }
@@ -100,12 +118,12 @@ Describe "TerminateConnection" {
     BeforeAll {
       Mock Disconnect-ExchangeOnline
       Mock Disconnect-AzAccount { throw "dummy_error" }
-      Mock Write-Error
+      Mock Write-Host
 
       TerminateConnection
     }
     It "Test Case: 1" {
-      Should -Invoke -CommandName Write-Error -Exactly -Times 1 -Scope Context
+      Should -Invoke -CommandName Write-Host -Exactly -Times 1 -Scope Context
     }
   }
 }

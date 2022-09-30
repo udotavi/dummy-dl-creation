@@ -77,7 +77,7 @@ function SetupConnection() {
     ConnectToExchange -appId "dummy_app_id" -organization "dummy_org" -vaultCertificateName $vaultCertificateName
   }
   catch {
-    Write-Error "$_"
+    Write-Host "$_"
     SetStatusObject -status "Error" -statusCode "400" -message "Cound not setup connection: $_"
   }
 }
@@ -91,7 +91,7 @@ function IsUniqueDL() {
     }
   }
   catch {
-    Write-Error "Exception Occured in IsUniqueDL function. $_"
+    Write-Host "Exception Occured in IsUniqueDL function. $_"
     SetStatusObject -status "Error" -statusCode "400" -message "Exception Occured in IsUniqueDL function. $_"
   }
 }
@@ -111,7 +111,7 @@ function FindOwners() {
     }
   }
   catch {
-    Write-Error "Exception Occured in FindOwners function. $_"
+    Write-Host "Exception Occured in FindOwners function. $_"
     SetStatusObject -status "Error" -statusCode "400" -message "Exception Occured in FindOwners function. $_"
   }
 }
@@ -125,7 +125,7 @@ function CreateDL() {
       -PrimarySmtpAddress $global:dlCreationObj.smtp_address
   }
   catch {
-    Write-Error "$_"
+    Write-Host "$_"
     SetStatusObject -status "Error" -statusCode "400" -message "Error during the DL creation: $_"
   }
 }
@@ -137,7 +137,7 @@ function TerminateConnection() {
     Disconnect-AzAccount -Confirm:$false
   }
   catch {
-    Write-Error "$_"
+    Write-Host "$_"
   }
 }
 
